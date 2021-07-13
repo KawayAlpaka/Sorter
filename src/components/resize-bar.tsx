@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { useDebounceFn } from "hooks/use-debounce";
-import { useCallback, useEffect, useRef } from "react";
+import { SyntheticEvent, useCallback, useEffect, useRef } from "react";
 import { useAppSelector } from "store";
 import { Theme } from "utils/switch-theme";
 import { ReactComponent as MoreIcon } from "image/more.svg"
@@ -35,48 +35,81 @@ export const ResizeBar = ({onResize}:{onResize?:()=>void})=>{
     }
   },[onResize]);
 
-  const onMouseDown = ()=>{
+
+  const move = (movementX:number)=>{
+    if(movementX === 0){
+      return;
+    }
+    const dom = ref.current as HTMLDivElement;
+    const prev = dom.previousElementSibling as HTMLElement;
+    const next = dom.nextElementSibling as HTMLElement;
+
+    if(prev && next){
+      const prevRect = prev.getBoundingClientRect();
+      const prevWidth = prevRect.width;
+      const nextRect = next.getBoundingClientRect();
+      const nextWidth = nextRect.width;
+      const perPix = 2 / (prevWidth + nextWidth);
+      
+      const newPrevFlex = perPix *  (prevWidth + movementX );
+      const newNextFlex = perPix *  (nextWidth - movementX );
+      const newPrevFlexStr = `${newPrevFlex} 0 0px`;
+      const newNextFlexStr = `${newNextFlex} 0 0px`;
+      prev.style.flex = newPrevFlexStr;
+      next.style.flex = newNextFlexStr;
+      debounceSaveFlex(newPrevFlexStr,newNextFlexStr);
+    }
+    onResize?.()
+  }
+  const onMouseDown = (evt:SyntheticEvent<HTMLDivElement,MouseEvent>)=>{
     console.log("onMouseDown");
+    console.log(evt);
     const onUp = ()=>{
       console.log("mouseup");
       document.removeEventListener("mouseup",onUp);
       document.removeEventListener("mousemove",onMove);
     };
+
     const onMove = (evt:MouseEvent)=>{
+      // console.log("onMove");
       evt.stopPropagation();
       evt.preventDefault();
-      if(evt.movementX === 0){
-        return;
-      }
-      const dom = ref.current as HTMLDivElement;
-      const prev = dom.previousElementSibling as HTMLElement;
-      const next = dom.nextElementSibling as HTMLElement;
-
-      if(prev && next){
-        const prevRect = prev.getBoundingClientRect();
-        const prevWidth = prevRect.width;
-        const nextRect = next.getBoundingClientRect();
-        const nextWidth = nextRect.width;
-        const perPix = 2 / (prevWidth + nextWidth);
-        
-        const newPrevFlex = perPix *  (prevWidth + evt.movementX );
-        const newNextFlex = perPix *  (nextWidth - evt.movementX );
-        const newPrevFlexStr = `${newPrevFlex} 0 0px`;
-        const newNextFlexStr = `${newNextFlex} 0 0px`;
-        prev.style.flex = newPrevFlexStr;
-        next.style.flex = newNextFlexStr;
-        debounceSaveFlex(newPrevFlexStr,newNextFlexStr);
-      }
-      onResize?.()
+      move(evt.movementX);
     }
+
     document.addEventListener("mouseup",onUp,false);
     document.addEventListener("mousemove",onMove,false);
+  }
+  const onTouchStart = (evt:SyntheticEvent<HTMLDivElement,TouchEvent>)=>{
+    console.log("onTouchStart");
+    const touch = evt.nativeEvent.touches[0];
+    if(touch){
+      let prevPageX = touch.pageX;
+      const onUp = ()=>{
+        console.log("touchup");
+        document.removeEventListener("touchend",onUp);
+        document.removeEventListener("touchmove",onTouchMove);
+      };
+      const onTouchMove = (evt:TouchEvent)=>{
+        // console.log("onTouchMove");
+        evt.stopPropagation();
+        evt.preventDefault();
+        const touch = evt.touches[0];
+        if(touch){
+          const movementX = touch.pageX - prevPageX;
+          prevPageX = touch.pageX;
+          move(movementX);
+        }
+      }
+      document.addEventListener("touchend",onUp,false);
+      document.addEventListener("touchmove",onTouchMove,false);
+    }
   }
 
   const theme = useAppSelector(s=>s.theme.theme)
 
   const ref = useRef<HTMLDivElement>(null);
-  return <ResizeBarContainer theme={theme} ref={ref} onMouseDown={onMouseDown}>
+  return <ResizeBarContainer theme={theme} ref={ref} onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
     <MoreIcon className="more"></MoreIcon>
     <MoreIcon className="more"></MoreIcon>
   </ResizeBarContainer>
@@ -93,6 +126,7 @@ height: 100%;
 width: 14px;
 border-right: 1px solid var(--border-color);
 border-left: 1px solid var(--border-color);
+touch-action: none;
 /* background-color: ${({theme})=> theme ==="dark" ? "transparent" : "transparent" }; */
 /* color: ${({theme})=> theme ==="dark" ? "#919191" : "#505050" }; */
 
