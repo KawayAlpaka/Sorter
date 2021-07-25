@@ -63,7 +63,9 @@ align-items: center;
 padding: 8px 12px;
 background-color: var(--background-color);
 border-top: 1px solid var(--border-color);
+/* contain: content; */
 .icon{
+  will-change: transform,filter;
   font-size: 30px;
   transition: all 0.3s;
   &:hover{

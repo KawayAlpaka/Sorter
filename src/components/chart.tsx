@@ -124,7 +124,7 @@ export const Chart = ()=>{
       <div></div>
       {
         rerunner?.list.map((item,index)=>(
-        <BarItem key={item.id} id={"BarItem"+item.id} width={rerunner.barWidth} style={{height:item.height,left:item.left}}>
+        <BarItem key={item.id} id={"BarItem"+item.id} change={item.leftChange !== 0} width={rerunner.barWidth} style={{height:item.height,left:item.left}}>
           { <div className={["baritem-value",!rerunner.isShowIndex ? "hidden" : ""].join(" ")}>{item.value}</div>}
           { <div className={["baritem-index",!rerunner.isShowIndex ? "hidden" : ""].join(" ")}>{index}</div>}
         </BarItem>
@@ -157,13 +157,15 @@ flex: 1;
 background-color: var(--editor-background-color);
 color: var(--color);
 user-select: none;
+overflow: hidden;
+contain: layout;
 `
 
 const ChartWarp = styled.div`
 flex: 1;
 position: relative;
 `
-const BarItem = styled.div<{width:number}>`
+const BarItem = styled.div<{width:number,change:boolean}>`
 position: absolute;
 bottom: 60px;
 display: block;
@@ -172,6 +174,7 @@ border-top-left-radius: 50% ${(p)=>p.width/2}px;
 border-top-right-radius: 50% ${(p)=>p.width/2}px;
 background-color: var(--baritem-background-color);
 transition: background-color 0.3s;
+will-change: ${(p)=>p.change ? "transform" : "auto"};
 &:hover{
   background-color: var(--baritem-background-hover-color);
   cursor: pointer;
