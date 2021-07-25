@@ -34,7 +34,8 @@
     "build": "craco build",
     "test": "ts-node src\\__tests__\\index.ts",
     "eject": "react-scripts eject",
-    "build-ts": "tsc src\\utils\\sort-list.ts --declaration --target esnext --outDir build-ts --excludeDirectories node_modules --skipLibCheck --moduleResolution node"
+    "build-ts": "tsc src\\utils\\sort-list.ts --declaration --target esnext --outDir build-ts --excludeDirectories node_modules --skipLibCheck --moduleResolution node",
+    "react-snap": "react-snap"
   },
   "eslintConfig": {
     "extends": [
@@ -54,5 +55,7 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "react-snap": "^1.23.0"
+  }
 }
